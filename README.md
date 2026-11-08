@@ -27,7 +27,12 @@ crm-grupo1-infra/
 ├── clonar.sh / .ps1            # clona los 5 repos de MS al lado de este
 ├── sincronizar-comun.sh / .ps1 # copia comun/ a ../crm-grupo1-msN/src
 ├── desplegar.sh / .ps1         # despliega los 7 stacks en orden
-└── demo-avance.ps1             # demo: 2 tenants, flujo de eventos y aislamiento
+├── datos/
+│   ├── generar_datos.py        # ingesta: 10 000 registros por tenant en cada MS (3 tenants = 30 000)
+│   ├── verificar_datos.py      # cuenta los registros por tenant directo en cada base
+│   ├── demo.py                 # demo: 2 tenants, flujo de eventos y aislamiento
+│   └── crm_aws.py              # utilidades comunes (stacks, tablas, RDS, reglas de cada MS)
+└── demo-avance.ps1             # la misma demo en PowerShell (para Windows)
 ```
 
 ## Cómo funciona
@@ -105,9 +110,44 @@ El RDS es lo que más cuesta.
 - MS2 y MS4 usan el usuario maestro del RDS; en producción cada MS tendría su propio usuario.
 - La cotización se guarda como HTML en S3 (el navegador la imprime a PDF).
 
+## Datos, verificación y demo (desde la EC2)
+
+Después de desplegar, en la EC2 y dentro de `crm-grupo1-infra`:
+
+```bash
+source ~/.crm-env                                               # CRM_DB_PASSWORD, PYTHON y AWS_PAGER
+python3.12 -m pip install --user -r requirements-dev.txt        # boto3 y pg8000 (una sola vez)
+python3.12 datos/generar_datos.py                               # ingesta (~2-4 min)
+python3.12 datos/verificar_datos.py                             # tabla de conteos por tenant
+python3.12 datos/verificar_datos.py --muestra                   # + un registro de ejemplo por MS
+python3.12 datos/demo.py                                        # demo con Andina y Nexo
+```
+
+**Qué carga `generar_datos.py`** (por tenant; 3 tenants: Andina, Nexo y Sol):
+
+| MS | Base | Registros por tenant |
+| --- | --- | --- |
+| MS1 | DynamoDB | 10 000 usuarios (1 admin, 50 gerentes, vendedores) |
+| MS2 | RDS `clientes_db` | 4 000 cuentas + 6 000 contactos (RUC válidos, un contacto principal por cuenta) |
+| MS3 | DynamoDB | 10 000 leads con puntaje y temperatura (+ marcas de unicidad EMAIL/TEL, contadores por mes y carga por vendedor) |
+| MS4 | RDS `ventas_db` | 4 000 oportunidades + 3 000 cotizaciones (IGV 18 %) + 3 000 ítems |
+| MS5 | DynamoDB | 6 000 actividades + 4 000 entradas de historial |
+
+- Escribe **directo** en cada base (DynamoDB con `batch_writer`, PostgreSQL con `COPY`): es una carga masiva,
+  no pasa por las APIs ni dispara eventos ni emails.
+- Cada registro se arma con las **reglas reales** de cada MS (`validar_lead`, `puntaje`, `segmento`,
+  `calcular_cotizacion`, ...), cargadas de los repos hermanos.
+- Es **reproducible** (semilla fija) e **idempotente**: en DynamoDB las claves son deterministas (sobrescribe,
+  no duplica) y en PostgreSQL cada tenant se carga en una transacción y se salta si ya tiene los datos
+  (`--reiniciar` lo vacía y recarga). `--simular` arma y valida todo sin tocar AWS. `--ms ms3 ms5` carga solo esos MS.
+- Usuarios para probar: `admin@andina.pe` / `DemoAndina2026`, `vendedor@andina.pe` / `DemoAndina2026`
+  (igual con `nexo.pe` / `DemoNexo2026` y `sollogistica.pe` / `DemoSol2026`). Los usuarios generados usan `Usuario2026`.
+- Las actividades pendientes generadas vencen dentro de 45 a 180 días, para que la tarea horaria de MS5
+  no las marque vencidas (ni mande emails) durante el semestre.
+
 ## Pendiente
 
-- [ ] Generador de datos: 30 000 registros por MS (10 000 por tenant, 3 tenants).
+- [x] Generador de datos: 30 000 registros por MS (10 000 por tenant, 3 tenants).
 - [ ] Frontend en Amplify (repo aparte).
 - [ ] Diagrama de arquitectura, E/R de MS2 y MS4, estructura JSON de MS1, MS3 y MS5.
 - [ ] Colección de Postman.
