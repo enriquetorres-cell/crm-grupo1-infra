@@ -9,7 +9,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 ORG=https://github.com/enriquetorres-cell
-for ms in ms1-usuarios ms2-clientes ms3-leads ms4-oportunidades ms5-actividades; do
+for ms in ms1-usuarios ms2-clientes ms3-leads ms4-oportunidades ms5-actividades frontend; do
   repo="crm-grupo1-$ms"
   if [ -d "$repo/.git" ]; then
     echo "== $repo: git pull"

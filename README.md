@@ -15,6 +15,7 @@ Este repo tiene la **infraestructura compartida** (SNS, SQS, RDS), el **código 
 | [crm-grupo1-ms3-leads](https://github.com/enriquetorres-cell/crm-grupo1-ms3-leads) | Leads, puntaje, asignación, importación CSV por **S3** | DynamoDB |
 | [crm-grupo1-ms4-oportunidades](https://github.com/enriquetorres-cell/crm-grupo1-ms4-oportunidades) | Pipeline, cotizaciones (HTML en **S3**), pronóstico | RDS `ventas_db` |
 | [crm-grupo1-ms5-actividades](https://github.com/enriquetorres-cell/crm-grupo1-ms5-actividades) | Agenda, historial del cliente, avisos por email | DynamoDB |
+| [crm-grupo1-frontend](https://github.com/enriquetorres-cell/crm-grupo1-frontend) | React + Vite en **Amplify**: login, panel, leads, Kanban, cuentas, agenda, usuarios | — |
 
 ## Este repo
 
@@ -148,6 +149,6 @@ python3.12 datos/demo.py                                        # demo con Andin
 ## Pendiente
 
 - [x] Generador de datos: 30 000 registros por MS (10 000 por tenant, 3 tenants).
-- [ ] Frontend en Amplify (repo aparte).
+- [x] Frontend en Amplify ([crm-grupo1-frontend](https://github.com/enriquetorres-cell/crm-grupo1-frontend); `desplegar.sh` lo publica al final).
 - [ ] Diagrama de arquitectura, E/R de MS2 y MS4, estructura JSON de MS1, MS3 y MS5.
 - [ ] Colección de Postman.

@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Stop'
 $raiz = Split-Path $PSScriptRoot -Parent
 $org = 'https://github.com/enriquetorres-cell'
-foreach ($ms in 'ms1-usuarios', 'ms2-clientes', 'ms3-leads', 'ms4-oportunidades', 'ms5-actividades') {
+foreach ($ms in 'ms1-usuarios', 'ms2-clientes', 'ms3-leads', 'ms4-oportunidades', 'ms5-actividades', 'frontend') {
     $repo = "crm-grupo1-$ms"
     $dir = Join-Path $raiz $repo
     if (Test-Path (Join-Path $dir '.git')) {

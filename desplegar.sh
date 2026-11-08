@@ -3,7 +3,7 @@
 #   export CRM_DB_PASSWORD='...'                 # mínimo 8 caracteres, sin / @ " ni espacios
 #   ./desplegar.sh                               # todo
 #   ./desplegar.sh --email gerente@correo.com    # + suscribe ese email a los avisos
-#   ./desplegar.sh --solo ms3-leads              # un solo servicio (compartido, rds o msN-x)
+#   ./desplegar.sh --solo ms3-leads              # un solo servicio (compartido, rds, msN-x o frontend)
 #   ./desplegar.sh --stage prod
 set -euo pipefail
 
@@ -43,10 +43,17 @@ crear_bases() {
 "$INFRA/sincronizar-comun.sh"
 
 ORDEN=(compartido rds ms1-usuarios ms2-clientes ms3-leads ms4-oportunidades ms5-actividades)
+# El frontend (Amplify) va al final si su repo está clonado al lado.
+if [ -f "$RAIZ/crm-grupo1-frontend/desplegar-frontend.sh" ]; then ORDEN+=(frontend); fi
 [ -n "$SOLO" ] && ORDEN=("$SOLO")
 
 for servicio in "${ORDEN[@]}"; do
   dir="$(carpeta "$servicio")"
+  if [ "$servicio" = frontend ]; then
+    echo -e "\n=== frontend (Amplify) ==="
+    STAGE="$STAGE" bash "$dir/desplegar-frontend.sh"
+    continue
+  fi
   [ -f "$dir/serverless.yml" ] || { echo "No encuentro $dir/serverless.yml (¿corriste ./clonar.sh?)" >&2; exit 1; }
   echo -e "\n=== $servicio ==="
   # compartido y rds usan el Serverless instalado en el repo infra; cada MS, el suyo.
@@ -60,7 +67,7 @@ for servicio in "${ORDEN[@]}"; do
 done
 
 if [ -z "$SOLO" ]; then
-  echo -e "\nURLs de las APIs (ponlas en el config del frontend):"
+  echo -e "\nURLs de las APIs:"
   for s in ms1-usuarios ms2-clientes ms3-leads ms4-oportunidades ms5-actividades; do
     echo "  $s -> $(salida "crm-$s-$STAGE" HttpApiUrl)"
   done
