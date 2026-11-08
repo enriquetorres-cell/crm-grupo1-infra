@@ -1,0 +1,181 @@
+# Recursos compartidos del CRM: el bus de eventos (SNS) y una cola SQS por consumidor.
+# Se despliega PRIMERO: los 5 MS leen sus ARN con ${cf:crm-compartido-<stage>.<Output>}.
+service: crm-compartido
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+
+params:
+  default:
+    # Email que recibe los avisos (gerente). Vacío = sin suscripción.
+    # serverless deploy --param="emailNotificaciones=gerente@correo.com"
+    emailNotificaciones: ''
+
+resources:
+  Conditions:
+    HayEmail:
+      Fn::Not:
+        - Fn::Equals:
+            - '${param:emailNotificaciones}'
+            - ''
+
+  Resources:
+    # ---------- SNS ----------
+    TopicoEventos:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: crm-eventos-${sls:stage}
+
+    TopicoNotificaciones:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: crm-notificaciones-${sls:stage}
+
+    SuscripcionEmail:
+      Type: AWS::SNS::Subscription
+      Condition: HayEmail
+      Properties:
+        TopicArn: { Ref: TopicoNotificaciones }
+        Protocol: email
+        Endpoint: ${param:emailNotificaciones}
+
+    # ---------- SQS: una cola + DLQ por consumidor ----------
+    # VisibilityTimeout = 6 x timeout de la Lambda consumidora (10 s), como recomienda AWS.
+    ColaMs2Dlq:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crm-ms2-dlq-${sls:stage}
+        MessageRetentionPeriod: 1209600
+    ColaMs2:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crm-ms2-${sls:stage}
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn: { Fn::GetAtt: [ColaMs2Dlq, Arn] }
+          maxReceiveCount: 3
+    SuscripcionMs2:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: { Ref: TopicoEventos }
+        Protocol: sqs
+        Endpoint: { Fn::GetAtt: [ColaMs2, Arn] }
+        RawMessageDelivery: true
+        FilterPolicy:
+          evento: [tenant.creado, lead.convertido, oportunidad.ganada]
+
+    ColaMs3Dlq:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crm-ms3-dlq-${sls:stage}
+        MessageRetentionPeriod: 1209600
+    ColaMs3:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crm-ms3-${sls:stage}
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn: { Fn::GetAtt: [ColaMs3Dlq, Arn] }
+          maxReceiveCount: 3
+    SuscripcionMs3:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: { Ref: TopicoEventos }
+        Protocol: sqs
+        Endpoint: { Fn::GetAtt: [ColaMs3, Arn] }
+        RawMessageDelivery: true
+        FilterPolicy:
+          evento: [usuario.creado]
+
+    ColaMs4Dlq:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crm-ms4-dlq-${sls:stage}
+        MessageRetentionPeriod: 1209600
+    ColaMs4:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crm-ms4-${sls:stage}
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn: { Fn::GetAtt: [ColaMs4Dlq, Arn] }
+          maxReceiveCount: 3
+    SuscripcionMs4:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: { Ref: TopicoEventos }
+        Protocol: sqs
+        Endpoint: { Fn::GetAtt: [ColaMs4, Arn] }
+        RawMessageDelivery: true
+        FilterPolicy:
+          evento: [tenant.creado, lead.convertido]
+
+    ColaMs5Dlq:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crm-ms5-dlq-${sls:stage}
+        MessageRetentionPeriod: 1209600
+    ColaMs5:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: crm-ms5-${sls:stage}
+        VisibilityTimeout: 60
+        RedrivePolicy:
+          deadLetterTargetArn: { Fn::GetAtt: [ColaMs5Dlq, Arn] }
+          maxReceiveCount: 3
+    SuscripcionMs5:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: { Ref: TopicoEventos }
+        Protocol: sqs
+        Endpoint: { Fn::GetAtt: [ColaMs5, Arn] }
+        RawMessageDelivery: true
+        FilterPolicy:
+          evento:
+            - usuario.creado
+            - lead.asignado
+            - lead.convertido
+            - oportunidad.etapa_cambiada
+            - oportunidad.ganada
+            - actividad.vencida
+
+    # Permite que SOLO el tópico de eventos escriba en las 4 colas.
+    PoliticaColas:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - { Ref: ColaMs2 }
+          - { Ref: ColaMs3 }
+          - { Ref: ColaMs4 }
+          - { Ref: ColaMs5 }
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: { Service: sns.amazonaws.com }
+              Action: sqs:SendMessage
+              Resource:
+                - { Fn::GetAtt: [ColaMs2, Arn] }
+                - { Fn::GetAtt: [ColaMs3, Arn] }
+                - { Fn::GetAtt: [ColaMs4, Arn] }
+                - { Fn::GetAtt: [ColaMs5, Arn] }
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: { Ref: TopicoEventos }
+
+  Outputs:
+    TopicoEventosArn:
+      Value: { Ref: TopicoEventos }
+    TopicoNotificacionesArn:
+      Value: { Ref: TopicoNotificaciones }
+    ColaMs2Arn:
+      Value: { Fn::GetAtt: [ColaMs2, Arn] }
+    ColaMs3Arn:
+      Value: { Fn::GetAtt: [ColaMs3, Arn] }
+    ColaMs4Arn:
+      Value: { Fn::GetAtt: [ColaMs4, Arn] }
+    ColaMs5Arn:
+      Value: { Fn::GetAtt: [ColaMs5, Arn] }
