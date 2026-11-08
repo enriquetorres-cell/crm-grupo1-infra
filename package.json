@@ -1,0 +1,8 @@
+{
+  "name": "crm-grupo1-infra",
+  "private": true,
+  "description": "CRM SaaS · CS2032 Grupo 1 · infraestructura compartida (SNS, SQS, RDS) y orquestación del despliegue",
+  "devDependencies": {
+    "serverless": "3.40.0"
+  }
+}

@@ -1,0 +1,2 @@
+# Lo usa desplegar para crear las 2 bases del RDS (rds/crear_bases.py).
+pg8000==1.31.6
