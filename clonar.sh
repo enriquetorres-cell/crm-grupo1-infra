@@ -13,6 +13,10 @@ for ms in ms1-usuarios ms2-clientes ms3-leads ms4-oportunidades ms5-actividades 
   repo="crm-grupo1-$ms"
   if [ -d "$repo/.git" ]; then
     echo "== $repo: git pull"
+    # src/comun.py y src/db.py son copias que genera sincronizar-comun: se descartan para que el pull no choque.
+    for copia in src/comun.py src/db.py; do
+      if git -C "$repo" ls-files --error-unmatch "$copia" > /dev/null 2>&1; then git -C "$repo" checkout -- "$copia"; fi
+    done
     git -C "$repo" pull --ff-only
   else
     echo "== $repo: git clone"
