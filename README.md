@@ -5,6 +5,9 @@ CRM **multi-tenant, serverless y basado en eventos** en AWS.
 
 Este repo tiene la **infraestructura compartida** (SNS, SQS, RDS), el **código común** y los **scripts** que despliegan todo en orden.
 
+> 📘 **¿Eres nuevo en el proyecto?** Empieza por [DOCUMENTACION.md](DOCUMENTACION.md): arquitectura, configuración de cada Lambda,
+> lógica de negocio de los 5 microservicios, despliegue, datos y demo.
+
 ## Repositorios
 
 | Repo | Qué es | BD |
@@ -150,5 +153,6 @@ python3.12 datos/demo.py                                        # demo con Andin
 
 - [x] Generador de datos: 30 000 registros por MS (10 000 por tenant, 3 tenants).
 - [x] Frontend en Amplify ([crm-grupo1-frontend](https://github.com/enriquetorres-cell/crm-grupo1-frontend); `desplegar.sh` lo publica al final).
-- [ ] Diagrama de arquitectura, E/R de MS2 y MS4, estructura JSON de MS1, MS3 y MS5.
+- [x] Diagrama de arquitectura ([docs/arquitectura.drawio](docs/arquitectura.drawio)).
+- [ ] E/R de MS2 y MS4, estructura JSON de MS1, MS3 y MS5 (en formato de informe).
 - [ ] Colección de Postman.
