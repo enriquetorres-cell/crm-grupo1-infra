@@ -1,0 +1,1699 @@
+{
+  "info": {
+    "name": "CRM SaaS · CS2032 Grupo 1",
+    "description": "5 microservicios serverless (API Gateway + Lambda), multi-tenant y basados en eventos.\n\nUso: correr primero la carpeta \"1 · Login\" (guarda token_andina y token_nexo). Luego \"2 · CRUD en DynamoDB\" mirando la tabla crm-ms3-dev-leads, y \"4 · Aislamiento multi-tenant\".\n\nSwagger: https://main.d2xbyfokesbhj7.amplifyapp.com/docs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 · Health de los 5 microservicios",
+      "description": "Rutas públicas: comprueban que las 5 APIs (API Gateway + Lambda) responden.",
+      "item": [
+        {
+          "name": "GET /ms1/health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms1}}/ms1/health",
+              "host": [
+                "{{ms1}}"
+              ],
+              "path": [
+                "ms1",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ms2/health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms2}}/ms2/health",
+              "host": [
+                "{{ms2}}"
+              ],
+              "path": [
+                "ms2",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ms3/health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/health",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ms4/health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms4}}/ms4/health",
+              "host": [
+                "{{ms4}}"
+              ],
+              "path": [
+                "ms4",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ms5/health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms5}}/ms5/health",
+              "host": [
+                "{{ms5}}"
+              ],
+              "path": [
+                "ms5",
+                "health"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 · Login: cómo se identifica al tenant",
+      "description": "Correr primero. El tenant NUNCA viaja en el body ni en la URL: sale del token, que valida el Lambda Authorizer de MS1.",
+      "item": [
+        {
+          "name": "Login Andina (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms1}}/ms1/login",
+              "host": [
+                "{{ms1}}"
+              ],
+              "path": [
+                "ms1",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"tenant_andina\",\n  \"email\": \"admin@andina.pe\",\n  \"password\": \"DemoAndina2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Devuelve el token Bearer (8 h). El script lo guarda en una variable de la colección."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_andina\", pm.response.json().token);",
+                  "pm.test(\"Token guardado en {{token_andina}}\", () => pm.expect(pm.response.json().token).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login Nexo (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms1}}/ms1/login",
+              "host": [
+                "{{ms1}}"
+              ],
+              "path": [
+                "ms1",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"tenant_nexo\",\n  \"email\": \"admin@nexo.pe\",\n  \"password\": \"DemoNexo2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Devuelve el token Bearer (8 h). El script lo guarda en una variable de la colección."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_nexo\", pm.response.json().token);",
+                  "pm.test(\"Token guardado en {{token_nexo}}\", () => pm.expect(pm.response.json().token).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ms1/me · Andina (lo que el Authorizer saca del token)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms1}}/ms1/me",
+              "host": [
+                "{{ms1}}"
+              ],
+              "path": [
+                "ms1",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"El tenant sale del token\", () => pm.expect(pm.response.json().tenant_id).to.eql(\"tenant_andina\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ms1/me · Nexo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms1}}/ms1/me",
+              "host": [
+                "{{ms1}}"
+              ],
+              "path": [
+                "ms1",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_nexo}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"El tenant sale del token\", () => pm.expect(pm.response.json().tenant_id).to.eql(\"tenant_nexo\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 · CRUD en DynamoDB · leads (MS3)",
+      "description": "Crear → modificar → eliminar, mirando la tabla crm-ms3-dev-leads en la consola de DynamoDB.",
+      "item": [
+        {
+          "name": "(1) CREAR lead · POST /ms3/leads",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresa\": \"Postman Demo {{sufijo}}\",\n  \"nombre\": \"Lucía\",\n  \"apellido\": \"Ramos\",\n  \"cargo\": \"Gerente de operaciones\",\n  \"email\": \"lucia{{sufijo}}@postmandemo.pe\",\n  \"telefono\": \"9{{sufijo}}\",\n  \"fuente\": \"referido\",\n  \"empleados\": 120,\n  \"monto_estimado\": 18000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Ver en DynamoDB → crm-ms3-dev-leads: aparece sk = LEAD#<lead_id> y las marcas EMAIL# y TEL#."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const s = Date.now().toString().slice(-8);",
+                  "pm.collectionVariables.set(\"sufijo\", s);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "const l = pm.response.json(); pm.collectionVariables.set(\"lead_id\", l.lead_id);",
+                  "pm.test(\"Se puntuó y se asignó\", () => { pm.expect(l.puntaje).to.be.above(0); pm.expect(l.estado).to.eql(\"nuevo\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Leer lead · GET /ms3/leads/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads/{{lead_id}}",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads",
+                "{{lead_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "(2) MODIFICAR lead · PATCH /ms3/leads/{id}/estado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads/{{lead_id}}/estado",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads",
+                "{{lead_id}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"contactado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "En DynamoDB el ítem cambia estado y aparece actualizado_en."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Estado = contactado\", () => pm.expect(pm.response.json().estado).to.eql(\"contactado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "(3) ELIMINAR lead · DELETE /ms3/leads/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads/{{lead_id}}",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads",
+                "{{lead_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Borra en una transacción el lead, sus marcas EMAIL#/TEL# y descuenta la carga del vendedor."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Eliminado\", () => pm.expect(pm.response.json().eliminado).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comprobar · GET del lead eliminado → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads/{{lead_id}}",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads",
+                "{{lead_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 · CRUD en DynamoDB · actividades (MS5)",
+      "description": "Lo mismo en la tabla crm-ms5-dev-actividades. Una actividad completada no se puede eliminar (409).",
+      "item": [
+        {
+          "name": "(1) CREAR actividad · POST /ms5/actividades",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms5}}/ms5/actividades",
+              "host": [
+                "{{ms5}}"
+              ],
+              "path": [
+                "ms5",
+                "actividades"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"tarea\",\n  \"titulo\": \"Enviar propuesta (Postman)\",\n  \"vence_en\": \"2026-12-20T15:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"actividad_id\", pm.response.json().actividad_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "(2) MODIFICAR · PATCH /ms5/actividades/{id}/estado (cancelada)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms5}}/ms5/actividades/{{actividad_id}}/estado",
+              "host": [
+                "{{ms5}}"
+              ],
+              "path": [
+                "ms5",
+                "actividades",
+                "{{actividad_id}}",
+                "estado"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"cancelada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "(3) ELIMINAR · DELETE /ms5/actividades/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms5}}/ms5/actividades/{{actividad_id}}",
+              "host": [
+                "{{ms5}}"
+              ],
+              "path": [
+                "ms5",
+                "actividades",
+                "{{actividad_id}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 · Aislamiento multi-tenant",
+      "description": "Un tenant no puede leer ni borrar datos de otro: la respuesta es 404 (no 403), para no revelar que el registro existe.",
+      "item": [
+        {
+          "name": "Andina crea un lead",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empresa\": \"Solo de Andina {{sufijo}}\",\n  \"email\": \"privado{{sufijo}}@andina-cliente.pe\",\n  \"telefono\": \"9{{sufijo}}\",\n  \"fuente\": \"web\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const s = Date.now().toString().slice(-8);",
+                  "pm.collectionVariables.set(\"sufijo\", s);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"lead_andina\", pm.response.json().lead_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Andina SÍ lo ve → 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads/{{lead_andina}}",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads",
+                "{{lead_andina}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nexo pide el lead de Andina → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads/{{lead_andina}}",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads",
+                "{{lead_andina}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_nexo}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"No revela que existe en otro tenant\", () => pm.expect(pm.response.json().error).to.eql(\"lead_no_encontrado\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nexo intenta borrarlo → 404",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads/{{lead_andina}}",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads",
+                "{{lead_andina}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_nexo}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sin token → 401 (Authorizer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token falso → 403 (Authorizer)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_falso}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Limpieza: Andina borra su lead",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads/{{lead_andina}}",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads",
+                "{{lead_andina}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 · MS1 Usuarios",
+      "description": "",
+      "item": [
+        {
+          "name": "GET /ms1/usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms1}}/ms1/usuarios?limit=5",
+              "host": [
+                "{{ms1}}"
+              ],
+              "path": [
+                "ms1",
+                "usuarios?limit=5"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /ms1/usuarios (límite del plan → 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms1}}/ms1/usuarios",
+              "host": [
+                "{{ms1}}"
+              ],
+              "path": [
+                "ms1",
+                "usuarios"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Nuevo Vendedor\",\n  \"email\": \"nuevo@andina.pe\",\n  \"password\": \"Clave2026\",\n  \"rol\": \"vendedor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 creado o 409 límite del plan\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6 · MS2 Clientes (PostgreSQL, schema por tenant)",
+      "description": "",
+      "item": [
+        {
+          "name": "GET /ms2/cuentas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms2}}/ms2/cuentas?limit=5",
+              "host": [
+                "{{ms2}}"
+              ],
+              "path": [
+                "ms2",
+                "cuentas?limit=5"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ms2/cuentas?segmento=A",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms2}}/ms2/cuentas?segmento=A&limit=5",
+              "host": [
+                "{{ms2}}"
+              ],
+              "path": [
+                "ms2",
+                "cuentas?segmento=A&limit=5"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /ms2/cuentas (RUC inválido → 422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms2}}/ms2/cuentas",
+              "host": [
+                "{{ms2}}"
+              ],
+              "path": [
+                "ms2",
+                "cuentas"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razon_social\": \"Empresa RUC malo\",\n  \"ruc\": \"20131312954\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7 · MS3 Leads (resto)",
+      "description": "",
+      "item": [
+        {
+          "name": "GET /ms3/leads?temperatura=caliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/leads?temperatura=caliente&limit=5",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "leads?temperatura=caliente&limit=5"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /ms3/importaciones (URL firmada S3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms3}}/ms3/importaciones",
+              "host": [
+                "{{ms3}}"
+              ],
+              "path": [
+                "ms3",
+                "importaciones"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8 · MS4 Oportunidades",
+      "description": "",
+      "item": [
+        {
+          "name": "GET /ms4/oportunidades?etapa=negociacion",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms4}}/ms4/oportunidades?etapa=negociacion&limit=5",
+              "host": [
+                "{{ms4}}"
+              ],
+              "path": [
+                "ms4",
+                "oportunidades?etapa=negociacion&limit=5"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ms4/pronostico",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms4}}/ms4/pronostico",
+              "host": [
+                "{{ms4}}"
+              ],
+              "path": [
+                "ms4",
+                "pronostico"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ms4/productos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms4}}/ms4/productos",
+              "host": [
+                "{{ms4}}"
+              ],
+              "path": [
+                "ms4",
+                "productos"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9 · MS5 Actividades (resto)",
+      "description": "",
+      "item": [
+        {
+          "name": "GET /ms5/actividades?estado=pendiente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{ms5}}/ms5/actividades?estado=pendiente&limit=5",
+              "host": [
+                "{{ms5}}"
+              ],
+              "path": [
+                "ms5",
+                "actividades?estado=pendiente&limit=5"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_andina}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "ms1",
+      "value": "https://2713kiu4u7.execute-api.us-east-1.amazonaws.com"
+    },
+    {
+      "key": "ms2",
+      "value": "https://mnfkhqb5w0.execute-api.us-east-1.amazonaws.com"
+    },
+    {
+      "key": "ms3",
+      "value": "https://6rmbwcownf.execute-api.us-east-1.amazonaws.com"
+    },
+    {
+      "key": "ms4",
+      "value": "https://rwaagpkjxk.execute-api.us-east-1.amazonaws.com"
+    },
+    {
+      "key": "ms5",
+      "value": "https://sqtdtdevyh.execute-api.us-east-1.amazonaws.com"
+    },
+    {
+      "key": "token_andina",
+      "value": ""
+    },
+    {
+      "key": "token_nexo",
+      "value": ""
+    },
+    {
+      "key": "token_falso",
+      "value": "token-que-no-existe"
+    },
+    {
+      "key": "lead_id",
+      "value": ""
+    },
+    {
+      "key": "actividad_id",
+      "value": ""
+    },
+    {
+      "key": "lead_andina",
+      "value": ""
+    },
+    {
+      "key": "sufijo",
+      "value": ""
+    }
+  ]
+}
