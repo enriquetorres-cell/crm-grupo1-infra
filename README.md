@@ -154,5 +154,5 @@ python3.12 datos/demo.py                                        # demo con Andin
 - [x] Generador de datos: 30 000 registros por MS (10 000 por tenant, 3 tenants).
 - [x] Frontend en Amplify ([crm-grupo1-frontend](https://github.com/enriquetorres-cell/crm-grupo1-frontend); `desplegar.sh` lo publica al final).
 - [x] Diagrama de arquitectura ([docs/arquitectura.drawio](docs/arquitectura.drawio)).
-- [ ] E/R de MS2 y MS4, estructura JSON de MS1, MS3 y MS5 (en formato de informe).
+- [x] E/R de MS2 y MS4 y estructura JSON de MS1, MS3 y MS5 ([docs/](docs/)).
 - [ ] Colección de Postman.

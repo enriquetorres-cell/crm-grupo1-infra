@@ -658,7 +658,7 @@ Corren sin AWS: `pip install -r requirements-dev.txt && python -m pytest -q` en 
 ## 16. Pendientes
 
 - [x] Diagrama de arquitectura: [`docs/arquitectura.drawio`](docs/arquitectura.drawio) (abrir en app.diagrams.net → Archivo → Exportar como PNG).
-- [ ] E/R de MS2 y MS4 y estructura JSON de MS1, MS3 y MS5 en formato de informe (la base ya está en los `esquema.sql` y los README).
+- [x] E/R de MS2 y MS4 ([er-ms2-clientes.drawio](docs/er-ms2-clientes.drawio), [er-ms4-oportunidades.drawio](docs/er-ms4-oportunidades.drawio)) y estructura JSON de MS1, MS3 y MS5 ([estructuras-json.md](docs/estructuras-json.md)).
 - [ ] Informe (Word/PDF) con evidencias y links a los repos, y resumen en PPT.
 - [ ] Colección de Postman (opcional).
 - [ ] Tarea programada de MS2 que pase a `inactivo` a los clientes sin actividad en 90 días (la regla `debe_pasar_a_inactivo` ya existe y está probada).
